@@ -1,0 +1,79 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgress-pv
+  labels:
+    user: postgress
+spec:
+  storageClassName: standard 
+  capacity:
+    storage: 2Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce 
+  persistentVolumeReclaimPolicy: Retain
+  hostPath:
+    path: "/home/amontasser/data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgress-pvc
+spec:
+  resources:
+    requests:
+      storage: 2Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgress-config-map
+data:
+  POSTGRES_DB: <YOUR_DB_NAME>
+  POSTGRES_USER: <YOUR_DB_USER>
+  POSTGRES_PASSWORD: <YOUR_DB_PASSWORD>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgress-service
+spec:
+  selector:
+    type: postgress
+  ports:
+  - port: 5432
+    targetPort: 5432
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgress-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      type: postgress
+  template:
+    metadata:
+      labels:
+        type: postgress
+    spec:
+      containers:
+      - name: postgress-container
+        image: postgres:16
+        ports:
+        - containerPort: 5432
+        envFrom:
+        - configMapRef:
+            name: postgress-config-map
+        volumeMounts:
+          - name: postgress-data
+            mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgress-data
+          persistentVolumeClaim:
+            claimName: postgress-pvc
