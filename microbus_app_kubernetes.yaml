@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: microbus-config-map
+data:
+  DB_URL: postgresql+psycopg2://admin:dino@postgress-sts-1.postgress-service.default.svc.cluster.local:5432/mydb
+  SERVER_PORT: "7000"
+  SERVER_HOST: "0.0.0.0"
+  APP_NAME: "microbus_app"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: microbus-service
+spec:
+  selector:
+    type: microbus
+  ports:
+  - port: 7000
+    targetPort: 7000
+    nodePort: 30015
+  type: NodePort
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: microbus-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      type: microbus
+  template:
+    metadata:
+      labels:
+        type: microbus
+    spec:
+      containers:
+      - name: microbus-container
+        image: ahmedmontasser/backend:microbusV1
+        imagePullPolicy: Always
+        workingDir: /microbus_app
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 7000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 60
+          failureThreshold: 3
+        ports:
+        - containerPort: 7000
+        envFrom:
+        - configMapRef:
+            name: microbus-config-map

@@ -1,42 +1,45 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: app-config-map
+  name: bus-config-map
 data:
-  DB_URL: postgresql+psycopg2://<USERNAME>:<PASSWORD>@<SVC_NAME>.<NAMESPACE>:<DATABASE_PORT>/<DATABASE_NAME>
+  DB_URL: postgresql+psycopg2://admin:dino@postgress-sts-0.postgress-service.default.svc.cluster.local:5432/mydb
   SERVER_PORT: "5000"
   SERVER_HOST: "0.0.0.0"
+  APP_NAME: "bus_app"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: app-service
+  name: bus-service
 spec:
   selector:
-    type: app
+    type: bus
   ports:
   - port: 5000
     targetPort: 5000
-  type: LoadBalancer
+    nodePort: 30010
+  type: NodePort
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: app-deployment
+  name: bus-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      type: app
+      type: bus
   template:
     metadata:
       labels:
-        type: app
+        type: bus
     spec:
       containers:
-      - name: app-container
-        image: <YOUR_APP_IMAGE>
+      - name: bus-container
+        image: ahmedmontasser/backend:busV1
         imagePullPolicy: Always
+        workingDir: /bus_app
         livenessProbe:
           httpGet:
             path: /health
@@ -49,4 +52,4 @@ spec:
         - containerPort: 5000
         envFrom:
         - configMapRef:
-            name: app-config-map
+            name: bus-config-map

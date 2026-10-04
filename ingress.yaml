@@ -1,0 +1,46 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: the-ingress
+  labels:
+    app.kubernetes.io/name: the-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: cairo-transportation.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/micro-buses"
+        backend:
+          service:
+            name: microbus-service
+            port:
+              number: 7000
+      - pathType: Prefix
+        path: "/buses"
+        backend:
+          service:
+            name: bus-service
+            port:
+              number: 5000
+  - host: bus.cairo-transportation.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: bus-service
+            port:
+              number: 5000
+  - host: microbus.cairo-transportation.com
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: microbus-service
+            port:
+              number: 7000
