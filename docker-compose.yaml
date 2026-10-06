@@ -17,6 +17,7 @@ services:
 
   bus_app:
     build: .
+    # image: ahmedmontasser/backend:busV1
     container_name: bus_app
     ports:
       - "5000:5000"
@@ -28,6 +29,21 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  # bus_app2:
+  #   image: ahmedmontasser/backend:busV1
+  #   container_name: bus_app2
+  #   ports:
+  #     - "7000:7000"
+  #   working_dir: /bus_app
+  #   environment:
+  #     SERVER_PORT: 7000
+  #     SERVER_HOST: 0.0.0.0
+  #     APP_NAME: bus_app
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+
 
   microbus_app:
     build: .
@@ -42,6 +58,19 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  # Trainging the Nginx container to serve as a reverse proxy for the bus_app and bus_app2 services
+#   nginx:
+#     build:
+#       context: ./nginx_app
+#       dockerfile: nginx.dockerfile
+#     container_name: nginx-container
+#     ports:
+#       - "80:80"
+#       - "443:443"
+#     depends_on:
+#       - bus_app
+#       - bus_app2
 
 volumes:
   pgdata:
